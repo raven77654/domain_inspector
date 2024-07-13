@@ -47,7 +47,7 @@ After adding the path and installation is done close the previous terminal and o
 ## How to Install
 
 ```bash
-https://github.com/raven77654/domain_gathering_tool.git
+https://github.com/raven77654/domain_inspector.git
 
 ```
 Go to the same directory where you clone the tool and type
@@ -60,19 +60,19 @@ After completing the installtion you need to type in your terminal
 
  
 ```bash
-python3 -m projectdomain
+python3 -m domain_inspector
 
 ```
 Or You Can Type 
 
 ```bash
-python3 -m projectdomain example.com
+python3 -m domain_inspector example.com
 ```
 
 
 ## How to uninstall the tool 
 ```bash
-pip uninstall projectdomain
+pip uninstall domain_inspector
 
 ```
 
