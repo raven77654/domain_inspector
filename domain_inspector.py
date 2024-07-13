@@ -135,7 +135,7 @@ def main():
         port_scan_result = perform_port_scan(ip_address)
         print(port_scan_result)
 
-        print("\nSubdomain Enumeration:")
+        print("\nMapped Subdomains:")
         subdomains = enumerate_subdomains(domain)
         if isinstance(subdomains, list):
             for subdomain in subdomains:
