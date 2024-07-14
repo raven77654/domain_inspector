@@ -25,11 +25,11 @@ def query_dns_records(domain):
         except dns.resolver.NoAnswer:
             records[qtype] = []
         except dns.resolver.NXDOMAIN:
-            return f"No {qtype} records found."
+            records[qtype] = f"No {qtype} records found."
         except dns.resolver.Timeout:
-            return "DNS resolution timed out."
+            records[qtype] = "DNS resolution timed out."
         except dns.exception.DNSException as e:
-            return f"DNS error: {str(e)}"
+            records[qtype] = f"DNS error: {str(e)}"
     return records
 
 def fetch_server_info(ip):
@@ -64,7 +64,8 @@ def get_ssl_certificate_info(domain):
 
 def perform_port_scan(ip):
     try:
-        cmd = f"nmap -F {ip}"
+        # Faster scan configuration: SYN scan on common ports with limited retries and timeout
+        cmd = f"sudo nmap -sS -T4 --max-retries 1 --host-timeout 30m -p1-1024 {ip}"
         result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
         if result.returncode == 0:
             return result.stdout
@@ -82,12 +83,17 @@ def enumerate_subdomains(domain):
         response = requests.get(url)
         if response.status_code == 200:
             data = response.json()
-            subdomains = [entry['name_value'].strip() for entry in data]
+            for entry in data:
+                name_value = entry.get('name_value')
+                if name_value:
+                    subdomains.extend(name_value.split('\n'))
+            return list(set(subdomains))  # Remove duplicates
         else:
             return f"Subdomain enumeration failed: {response.status_code}"
-    except Exception as e:
-        return f"Subdomain enumeration error: {str(e)}"
-    return subdomains
+    except requests.exceptions.RequestException as e:
+        return f"Subdomain enumeration request error: {str(e)}"
+    except ValueError as e:
+        return f"Error parsing response: {str(e)}"
 
 def main():
     domain = input("Enter domain name: ")
@@ -121,7 +127,11 @@ def main():
 
         print("\nWHOIS Information:")
         whois_info = retrieve_whois_info(domain)
-        print(whois_info)
+        if isinstance(whois_info, dict):
+            for key, value in whois_info.items():
+                print(f"{key}: {value}")
+        else:
+            print(whois_info)
 
         print("\nSSL Certificate Details:")
         ssl_info = get_ssl_certificate_info(domain)
@@ -135,7 +145,7 @@ def main():
         port_scan_result = perform_port_scan(ip_address)
         print(port_scan_result)
 
-        print("\nMapped Subdomains:")
+        print("\nSubdomain Enumeration:")
         subdomains = enumerate_subdomains(domain)
         if isinstance(subdomains, list):
             for subdomain in subdomains:
