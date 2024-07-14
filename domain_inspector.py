@@ -76,24 +76,15 @@ def perform_port_scan(ip):
 
 def enumerate_subdomains(domain):
     try:
-        subdomains = []
-        ext = tldextract.extract(domain)
-        base_domain = f"{ext.domain}.{ext.suffix}"
-        url = f"https://crt.sh/?q=%25.{base_domain}&output=json"
+        url = f"https://api.hackertarget.com/hostsearch/?q={domain}"
         response = requests.get(url)
         if response.status_code == 200:
-            data = response.json()
-            for entry in data:
-                name_value = entry.get('name_value')
-                if name_value:
-                    subdomains.extend(name_value.split('\n'))
-            return list(set(subdomains))  # Remove duplicates
+            subdomains = [line.split(',')[0] for line in response.text.split('\n') if line]
+            return subdomains
         else:
             return f"Subdomain enumeration failed: {response.status_code}"
-    except requests.exceptions.RequestException as e:
-        return f"Subdomain enumeration request error: {str(e)}"
-    except ValueError as e:
-        return f"Error parsing response: {str(e)}"
+    except requests.RequestException as e:
+        return f"Subdomain enumeration error: {str(e)}"
 
 def main():
     domain = input("Enter domain name: ")
